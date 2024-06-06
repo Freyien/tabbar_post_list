@@ -1,41 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tabbar_post_list/features/home/ui/bloc/post_bloc.dart';
+import 'package:tabbar_post_list/features/home/ui/widgets/home_appbar/home_appbar.dart';
+import 'package:tabbar_post_list/features/home/ui/widgets/home_title.dart';
 
 class HomeInfiniteScroll extends StatefulWidget {
-  const HomeInfiniteScroll({super.key, required this.slivers});
+  const HomeInfiniteScroll({super.key, required this.children});
 
-  final List<Widget> slivers;
+  final List<Widget> children;
 
   @override
   State<HomeInfiniteScroll> createState() => _HomeInfiniteScrollState();
 }
 
 class _HomeInfiniteScrollState extends State<HomeInfiniteScroll> {
-  late ScrollController _scrollController;
+  final GlobalKey<NestedScrollViewState> globalKey = GlobalKey();
 
   @override
   void initState() {
-    _scrollController = ScrollController();
-    _scrollController.addListener(_loadMore);
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      globalKey.currentState!.innerController.addListener(_loadMore);
+    });
 
     super.initState();
   }
 
   void _loadMore() {
-    final scrollPosition = _scrollController.position;
+    final scrollPosition = globalKey.currentState!.innerController.position;
     final currentPosition = scrollPosition.pixels;
     final maxPosition = scrollPosition.maxScrollExtent * .8;
 
     if (currentPosition < maxPosition) return;
 
-    _scrollController.removeListener(_loadMore);
+    globalKey.currentState!.innerController.removeListener(_loadMore);
     context.read<PostBloc>().add(GetMorePostListEvent());
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
     super.dispose();
   }
 
@@ -47,11 +49,22 @@ class _HomeInfiniteScrollState extends State<HomeInfiniteScroll> {
         if (state.isLoadingMore) return;
 
         await Future.delayed(const Duration(milliseconds: 500));
-        _scrollController.addListener(_loadMore);
+        globalKey.currentState!.innerController.addListener(_loadMore);
       },
-      child: CustomScrollView(
-        controller: _scrollController,
-        slivers: widget.slivers,
+      child: NestedScrollView(
+        key: globalKey,
+        headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+          return [
+            // Title and subtitle
+            const HomeTitle(),
+
+            // Appbar with Tabs
+            const HomeAppBar(),
+          ];
+        },
+        body: TabBarView(
+          children: widget.children,
+        ),
       ),
     );
   }

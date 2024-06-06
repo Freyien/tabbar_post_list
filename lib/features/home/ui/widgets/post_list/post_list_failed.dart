@@ -7,15 +7,12 @@ class PostListFailed extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SliverFillRemaining(
-      hasScrollBody: false,
-      child: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            context.read<PostBloc>().add(GetPostListEvent());
-          },
-          child: const Text('Reintentar'),
-        ),
+    return Center(
+      child: ElevatedButton(
+        onPressed: () {
+          context.read<PostBloc>().add(GetPostListEvent());
+        },
+        child: const Text('Reintentar'),
       ),
     );
   }
