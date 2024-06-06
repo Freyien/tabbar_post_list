@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 
 class HomeAppBar extends StatelessWidget {
-  const HomeAppBar({super.key});
+  const HomeAppBar({super.key, required this.tabController});
+
+  final TabController tabController;
 
   @override
   Widget build(BuildContext context) {
-    return const SliverAppBar(
+    return SliverAppBar(
       pinned: true,
       floating: true,
       snap: false,
       toolbarHeight: 0,
       bottom: TabBar(
-        tabs: [
+        controller: tabController,
+        tabs: const [
           Tab(text: 'Posts'),
           Tab(text: 'Other'),
         ],

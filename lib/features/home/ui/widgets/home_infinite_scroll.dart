@@ -13,16 +13,31 @@ class HomeInfiniteScroll extends StatefulWidget {
   State<HomeInfiniteScroll> createState() => _HomeInfiniteScrollState();
 }
 
-class _HomeInfiniteScrollState extends State<HomeInfiniteScroll> {
+class _HomeInfiniteScrollState extends State<HomeInfiniteScroll>
+    with SingleTickerProviderStateMixin {
   final GlobalKey<NestedScrollViewState> globalKey = GlobalKey();
+  late TabController _tabController;
 
   @override
   void initState() {
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(_tabListener);
+
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       globalKey.currentState!.innerController.addListener(_loadMore);
     });
 
     super.initState();
+  }
+
+  void _tabListener() {
+    if (_tabController.indexIsChanging) return;
+
+    if (_tabController.index == 0) {
+      return globalKey.currentState!.innerController.addListener(_loadMore);
+    }
+
+    return globalKey.currentState!.innerController.removeListener(_loadMore);
   }
 
   void _loadMore() {
@@ -38,6 +53,7 @@ class _HomeInfiniteScrollState extends State<HomeInfiniteScroll> {
 
   @override
   void dispose() {
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -59,10 +75,11 @@ class _HomeInfiniteScrollState extends State<HomeInfiniteScroll> {
             const HomeTitle(),
 
             // Appbar with Tabs
-            const HomeAppBar(),
+            HomeAppBar(tabController: _tabController),
           ];
         },
         body: TabBarView(
+          controller: _tabController,
           children: widget.children,
         ),
       ),
